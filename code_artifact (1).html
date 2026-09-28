@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>갈등 해결 마스터: 4단계 대화법</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        .bounce-in {
+            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) both;
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        .success-bg {
+            background: linear-gradient(135deg, #a7f3d0 0%, #34d399 100%);
+        }
+        .fail-bg {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-100 via-purple-50 to-blue-100">
+
+    <div id="app" class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden relative min-h-[600px] flex flex-col">
+        
+        <!-- Header / Progress Bar -->
+        <div id="header" class="bg-indigo-600 text-white p-4 hidden flex-col sm:flex-row justify-between items-center z-10 shadow-md">
+            <h1 class="text-xl font-bold mb-2 sm:mb-0">🗣️ 갈등 해결 마스터</h1>
+            <div class="flex items-center space-x-2">
+                <span class="text-sm font-medium">Stage <span id="current-stage">1</span> / <span id="total-stages">30</span></span>
+                <div class="w-32 h-3 bg-indigo-900 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="h-full bg-yellow-400 transition-all duration-500 w-0"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="content-area" class="flex-1 flex items-center justify-center p-6 relative">
+            
+            <!-- START SCREEN -->
+            <div id="start-screen" class="text-center bounce-in w-full">
+                <div class="text-6xl mb-6">🤝</div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-4">갈등 해결 마스터</h1>
+                <p class="text-gray-600 mb-8 max-w-md mx-auto text-lg leading-relaxed">
+                    올바른 대화 공식을 사용하여 30가지 다양한 갈등 상황을 지혜롭게 해결해 보세요!<br>
+                    <span class="font-bold text-indigo-600 mt-2 block">공식: 사실 ➡️ 감정 ➡️ 기대 ➡️ 부탁</span>
+                </p>
+                <div class="bg-indigo-50 p-4 rounded-xl text-sm text-gray-700 text-left mb-8 max-w-lg mx-auto shadow-inner border border-indigo-100">
+                    <ul class="space-y-2">
+                        <li>👁️ <b>1. 사실:</b> 객관적인 사실이나 관찰한 내용 말하기</li>
+                        <li>❤️ <b>2. 감정:</b> 자신의 감정 진솔하게 이야기하기</li>
+                        <li>✨ <b>3. 기대:</b> 기대하는 바(바람) 말하기</li>
+                        <li>🙏 <b>4. 부탁:</b> 구체적으로 부탁하기</li>
+                    </ul>
+                </div>
+                <button onclick="startGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95 text-lg">
+                    게임 시작하기
+                </button>
+            </div>
+
+            <!-- GAME SCREEN -->
+            <div id="game-screen" class="hidden w-full flex-col h-full animate-fade-in">
+                <!-- Scenario Info -->
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-4">
+                    <h2 class="text-sm font-bold text-blue-600 mb-1">상황 <span id="scenario-number">1</span></h2>
+                    <p id="scenario-text" class="text-gray-800 font-medium text-base sm:text-lg leading-snug"></p>
+                </div>
+
+                <!-- Input Area -->
+                <div class="flex-1 flex flex-col">
+                    <label class="text-gray-700 font-bold mb-2 flex justify-between items-end">
+                        <span>상대방에게 할 말을 서술형으로 작성하세요.</span>
+                        <span class="text-xs text-gray-500 font-normal hover:text-indigo-600 cursor-pointer" onclick="showHint()">공식 힌트 보기 💡</span>
+                    </label>
+                    <textarea id="user-input" 
+                        class="w-full flex-1 min-h-[150px] p-4 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 resize-none text-base transition-colors placeholder-gray-400"
+                        placeholder="예: 네가 ~해서(사실), 나는 ~해(감정). 나는 우리가 ~했으면 좋겠어(기대). 앞으로는 ~해줄 수 있을까?(부탁)"></textarea>
+                    
+                    <!-- Keyword Pills -->
+                    <div class="flex flex-wrap gap-2 mt-3" id="keyword-pills">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full border border-gray-200">✔️ 사실</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full border border-gray-200">✔️ 감정</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full border border-gray-200">✔️ 기대</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full border border-gray-200">✔️ 부탁</span>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="mt-4 flex justify-end">
+                    <button onclick="submitAnswer()" id="submit-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition-all active:scale-95 w-full sm:w-auto">
+                        대화 건네기 💬
+                    </button>
+                </div>
+            </div>
+
+            <!-- RESULT SCREEN (End of Game) -->
+            <div id="result-screen" class="hidden text-center bounce-in w-full">
+                <div class="text-6xl mb-6">🏆</div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-4">초월적 마스터 등극!</h1>
+                <p class="text-gray-600 mb-8 text-lg">
+                    축하합니다! 무려 30개의 모든 갈등 상황을 <br>지혜로운 대화로 완벽하게 해결하셨습니다.
+                </p>
+                <div class="bg-yellow-50 p-6 rounded-2xl border border-yellow-200 mb-8">
+                    <h3 class="font-bold text-yellow-800 mb-2">기억하세요!</h3>
+                    <p class="text-sm text-yellow-700">비난이나 공격 대신, 나의 마음을 진솔하게 전달하는 <b>'나' 전달법(I-Message)</b>은 관계를 지키며 갈등을 해결하는 가장 강력한 무기입니다.</p>
+                </div>
+                <button onclick="resetGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95 text-lg">
+                    다시 도전하기
+                </button>
+            </div>
+        </div>
+
+        <!-- Custom Modal for Feedback -->
+        <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+            <div id="modal-content" class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full transform scale-95 transition-transform duration-300">
+                <div class="text-center">
+                    <div id="modal-icon" class="text-5xl mb-4">🤔</div>
+                    <h3 id="modal-title" class="text-xl font-bold text-gray-900 mb-2">결과 확인</h3>
+                    <p id="modal-desc" class="text-gray-600 mb-6 text-sm leading-relaxed text-left bg-gray-50 p-3 rounded-lg"></p>
+                    <button onclick="closeModal()" id="modal-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-colors">
+                        다시 써보기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let currentStage = 0;
+        
+        // Scenario Data (Expanded to 30)
+        const scenarios = [
+            { // 1
+                text: "친구 민수가 학원을 핑계로 모둠 과제 모임에 3번이나 빠졌고, 맡은 자료조사도 해오지 않아 당신과 다른 모둠원들이 피해를 보고 있습니다.",
+                keywords: {
+                    fact: ["모임", "모둠", "빠져", "학원", "자료", "과제", "안 해", "3번"],
+                    feeling: ["속상", "서운", "힘들", "부담", "걱정", "화가", "당황", "불편", "답답"],
+                    need: ["중요", "같이", "함께", "잘", "점수", "책임", "도움", "필요", "마치고"],
+                    request: ["줄래", "부탁", "어떨까", "주겠니", "수 있어", "주면 좋겠", "해줘", "참여해", "시간을 내"]
+                }
+            },
+            { // 2
+                text: "가장 친한 친구 수진이가 당신이 아끼는 한정판 볼펜을 말도 없이 가져가서 쓰다가 책상에 그냥 두고 갔습니다.",
+                keywords: {
+                    fact: ["물건", "허락", "말도 없이", "펜", "가져", "책상", "내 거", "볼펜", "그냥", "쓰고"],
+                    feeling: ["속상", "당황", "화", "기분이", "서운", "불쾌", "놀랐"],
+                    need: ["존중", "소중", "아끼는", "물어", "허락", "규칙", "예의"],
+                    request: ["줄래", "부탁", "어떨까", "주겠니", "수 있어", "좋겠", "해줘", "말해", "물어봐"]
+                }
+            },
+            { // 3
+                text: "친구 지훈이가 오늘도 약속 시간에 30분 늦게 나타났습니다. 이번 달에만 벌써 4번째 지각입니다.",
+                keywords: {
+                    fact: ["약속", "시간", "늦", "30분", "기다", "지각", "4번", "매번", "오늘도"],
+                    feeling: ["속상", "서운", "화가", "지쳐", "힘들어", "무시", "짜증", "기운이 빠"],
+                    need: ["중요", "약속", "소중", "지켜", "존중", "신뢰", "시간이"],
+                    request: ["줄래", "부탁", "어떨까", "주겠니", "수 있어", "주면 좋겠", "해줘", "일찍", "연락해"]
+                }
+            },
+            { // 4
+                text: "친구가 5천 원을 빌려간 지 한 달이 지났는데 갚지 않고, 매점에서는 돈을 펑펑 씁니다.",
+                keywords: {
+                    fact: ["돈", "5천원", "오천원", "빌려", "한 달", "안 갚", "매점", "쓰면서"],
+                    feeling: ["서운", "당황", "속상", "불편", "기분이", "억울", "화가"],
+                    need: ["약속", "신뢰", "필요", "책임", "믿음"],
+                    request: ["갚아", "돌려", "줄래", "수 있어", "부탁", "해줘", "주겠니"]
+                }
+            },
+            { // 5
+                text: "절친에게만 비밀로 말한 나의 짝사랑 이야기를 그 친구가 다른 친구들에게 다 말하고 다녔습니다.",
+                keywords: {
+                    fact: ["비밀", "짝사랑", "이야기", "다른", "친구들", "말하고", "퍼뜨", "소문"],
+                    feeling: ["배신감", "속상", "화가", "당황", "슬퍼", "서운", "놀랐"],
+                    need: ["믿음", "신뢰", "비밀", "약속", "존중", "중요"],
+                    request: ["사과해", "하지 마", "조심해", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 6
+                text: "친구들이 나만 빼고 단톡방을 만들어서 주말에 놀러 간 사진을 SNS에 올렸습니다.",
+                keywords: {
+                    fact: ["단톡방", "나만 빼고", "사진", "SNS", "주말", "놀러", "올렸", "소외"],
+                    feeling: ["서운", "외로", "소외감", "속상", "슬퍼", "당황", "상처"],
+                    need: ["함께", "소속감", "친하게", "같이", "중요", "어울리"],
+                    request: ["초대해", "말해", "줄래", "부탁", "수 있어", "좋겠", "끼워"]
+                }
+            },
+            { // 7
+                text: "친구가 장난이라며 내 외모나 콤플렉스를 다른 친구들 앞에서도 자꾸 지적하고 놀립니다.",
+                keywords: {
+                    fact: ["외모", "콤플렉스", "장난", "지적", "놀려", "놀림", "앞에서", "자꾸"],
+                    feeling: ["상처", "속상", "부끄", "창피", "불쾌", "화가", "기분이"],
+                    need: ["존중", "배려", "예의", "친구", "편안", "이해"],
+                    request: ["그만해", "하지 마", "조심해", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 8
+                text: "내가 진지하게 말하고 있는데, 친구가 자꾸 말을 끊고 자기 이야기만 계속 합니다.",
+                keywords: {
+                    fact: ["말을 끊", "자기 이야기", "말하는데", "중간에", "계속", "끼어"],
+                    feeling: ["무시", "답답", "서운", "기운 빠", "화가", "속상", "불편"],
+                    need: ["경청", "대화", "존중", "끝까지", "이해", "소통"],
+                    request: ["들어", "기다려", "줄래", "부탁", "수 있어", "좋겠", "해줘"]
+                }
+            },
+            { // 9
+                text: "아침에 학교에 오자마자 친구가 내 숙제를 허락도 없이 가져가서 베낍니다.",
+                keywords: {
+                    fact: ["숙제", "아침", "허락", "없이", "가져", "베껴", "베끼"],
+                    feeling: ["당황", "불쾌", "속상", "화가", "억울", "불편", "놀랐"],
+                    need: ["노력", "정직", "예의", "규칙", "허락", "존중"],
+                    request: ["물어봐", "하지 마", "직접 해", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 10
+                text: "주말에 영화를 보기로 했는데, 약속 시간 30분 전에 친구가 피곤하다며 갑자기 취소 통보를 했습니다.",
+                keywords: {
+                    fact: ["영화", "약속", "30분", "전", "갑자기", "취소", "피곤", "당일"],
+                    feeling: ["허탈", "짜증", "서운", "화가", "당황", "속상", "기운 빠"],
+                    need: ["시간", "계획", "약속", "존중", "책임", "중요"],
+                    request: ["미리", "말해", "연락해", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 11
+                text: "친구에게 빌려준 만화책을 구겨지고 얼룩진 상태로 돌려받았는데, 친구는 사과 한마디 없습니다.",
+                keywords: {
+                    fact: ["만화책", "책", "구겨", "얼룩", "돌려", "사과", "없이", "훼손"],
+                    feeling: ["속상", "화가", "실망", "당황", "서운", "불쾌"],
+                    need: ["소중", "물건", "아끼는", "책임", "조심", "예의"],
+                    request: ["사과해", "조심해", "배상해", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 12
+                text: "언니(또는 형/동생)가 내가 가장 아끼는 옷을 말도 없이 입고 나갔습니다.",
+                keywords: {
+                    fact: ["옷", "아끼는", "말도 없이", "허락", "입고", "나갔"],
+                    feeling: ["화가", "짜증", "당황", "속상", "어이없", "불쾌"],
+                    need: ["허락", "내 물건", "존중", "사생활", "규칙", "예의"],
+                    request: ["물어봐", "입지 마", "말해", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 13
+                text: "나는 내일 중요한 시험이 있어서 공부해야 하는데, 동생이 거실에서 큰 소리로 게임을 하고 있습니다.",
+                keywords: {
+                    fact: ["시험", "공부", "내일", "동생", "거실", "큰 소리", "게임", "시끄"],
+                    feeling: ["방해", "짜증", "불안", "답답", "예민", "화가", "힘들"],
+                    need: ["집중", "조용", "배려", "이해", "환경", "중요"],
+                    request: ["줄여", "조용히", "꺼", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 14
+                text: "부모님이 나의 성적을 친척이나 다른 친구와 비교하며 꾸중하셔서 자존심이 상했습니다.",
+                keywords: {
+                    fact: ["성적", "비교", "친척", "친구", "꾸중", "말씀", "혼내"],
+                    feeling: ["상처", "속상", "자존심", "우울", "슬퍼", "서운", "의기소침"],
+                    need: ["인정", "노력", "격려", "응원", "내 자체", "존중"],
+                    request: ["비교하지", "믿어", "칭찬해", "주세요", "부탁", "수 있으신가요", "좋겠"]
+                }
+            },
+            { // 15
+                text: "동생이 자기 차례인 설거지(집안일)를 하지 않고 놀러 나가서, 결국 내가 대신 해야 하는 상황입니다.",
+                keywords: {
+                    fact: ["동생", "설거지", "집안일", "차례", "안 하고", "놀러", "내가", "대신"],
+                    feeling: ["억울", "짜증", "화가", "불공평", "힘들", "피곤"],
+                    need: ["규칙", "책임", "분담", "약속", "공평", "협동"],
+                    request: ["해라", "하고 가", "지켜", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 16
+                text: "방에서 쉬고 있거나 옷을 갈아입으려는데, 부모님이 노크 없이 벌컥 문을 열고 들어오십니다.",
+                keywords: {
+                    fact: ["방", "노크", "없이", "벌컥", "문", "열고", "들어", "쉬고", "옷"],
+                    feeling: ["당황", "깜짝", "불편", "짜증", "놀랐", "화가"],
+                    need: ["사생활", "개인 공간", "프라이버시", "존중", "배려"],
+                    request: ["노크", "두드려", "기다려", "주세요", "부탁", "수 있으신가요", "좋겠"]
+                }
+            },
+            { // 17
+                text: "냉장고에 내 이름까지 적어두고 아껴둔 간식을 가족 누군가가 다 먹어버렸습니다.",
+                keywords: {
+                    fact: ["이름", "냉장고", "간식", "아껴", "먹어", "누군가", "없어"],
+                    feeling: ["허탈", "짜증", "화가", "속상", "서운", "어이없"],
+                    need: ["내 것", "허락", "물어", "기대", "존중"],
+                    request: ["먹지 마", "사놔", "물어봐", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 18
+                text: "수업 시간에 짝꿍이 말을 걸어서 대답만 짧게 했을 뿐인데, 선생님이 나만 떠든다며 크게 혼내셨습니다.",
+                keywords: {
+                    fact: ["수업", "짝꿍", "대답", "선생님", "나만", "떠든", "혼내", "오해"],
+                    feeling: ["억울", "당황", "속상", "부끄", "창피", "슬퍼"],
+                    need: ["공평", "진실", "이해", "설명", "사실", "들어주"],
+                    request: ["들어", "오해를 풀어", "주세요", "부탁", "수 있으신가요", "좋겠"]
+                }
+            },
+            { // 19
+                text: "급식실에서 오랫동안 줄을 서 있었는데, 선배(또는 다른 친구)가 슬쩍 내 앞에 끼어듭니다.",
+                keywords: {
+                    fact: ["급식실", "줄", "오래", "선배", "친구", "앞에", "끼어", "새치기"],
+                    feeling: ["불쾌", "짜증", "화가", "당황", "억울", "황당"],
+                    need: ["질서", "규칙", "공평", "차례", "존중", "예의"],
+                    request: ["뒤로", "가주", "서주", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 20
+                text: "방과 후 청소 시간인데, 같이 구역을 맡은 짝꿍이 쓰레기만 대충 버리고 도망갔습니다.",
+                keywords: {
+                    fact: ["청소", "방과 후", "짝꿍", "쓰레기", "대충", "도망", "혼자"],
+                    feeling: ["힘들", "억울", "짜증", "화가", "어이없", "당황"],
+                    need: ["책임", "같이", "협동", "공평", "규칙", "도움"],
+                    request: ["하고 가", "같이 해", "도와", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 21
+                text: "짝꿍이 자기 물건을 내 책상 쪽으로 자꾸 밀어 넣어서 선을 넘고, 내 필기 공간을 좁게 만듭니다.",
+                keywords: {
+                    fact: ["물건", "책상", "선", "넘어", "밀어", "공간", "좁게", "필기"],
+                    feeling: ["불편", "답답", "짜증", "신경", "방해", "불쾌"],
+                    need: ["영역", "경계", "존중", "정리", "편안", "배려"],
+                    request: ["치워", "넘어오지", "가져가", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 22
+                text: "친구가 지우개, 샤프심 같은 학용품을 매번 빌려가기만 하고 돌려주지 않거나 자기 것처럼 막 씁니다.",
+                keywords: {
+                    fact: ["지우개", "샤프심", "학용품", "매번", "빌려", "안 돌려", "자기 것", "막 쓰"],
+                    feeling: ["아까워", "짜증", "불편", "서운", "속상", "신경"],
+                    need: ["내 물건", "아껴", "책임", "반납", "준비", "존중"],
+                    request: ["돌려", "사서", "가져와", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 23
+                text: "친구와 온라인 팀 게임을 하던 중, 내가 한 번 실수를 하자 친구가 마이크로 심하게 화를 내며 욕설을 합니다.",
+                keywords: {
+                    fact: ["게임", "실수", "마이크", "심하게", "화", "욕설", "욕을"],
+                    feeling: ["당황", "상처", "기분이 나빠", "불쾌", "놀랐", "서운", "무안"],
+                    need: ["매너", "재미", "존중", "친절", "예의", "이해"],
+                    request: ["욕하지", "부드럽게", "말해", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 24
+                text: "친구가 내 얼굴이 이상하고 웃기게 나온 사진을 내 동의 없이 단톡방이나 SNS에 장난으로 올렸습니다.",
+                keywords: {
+                    fact: ["얼굴", "이상하게", "사진", "동의", "없이", "단톡방", "SNS", "올렸"],
+                    feeling: ["창피", "수치", "속상", "화가", "당황", "불쾌", "놀랐"],
+                    need: ["허락", "초상권", "사생활", "존중", "예의", "배려"],
+                    request: ["지워", "내려", "올리지", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 25
+                text: "중요한 질문을 메시지로 보냈는데, 친구가 며칠째 '읽씹(읽고 무시)'을 하면서 SNS에는 자기 노는 사진을 올립니다.",
+                keywords: {
+                    fact: ["질문", "메시지", "며칠", "읽고", "무시", "읽씹", "SNS", "사진", "올리"],
+                    feeling: ["무시", "서운", "답답", "화가", "속상", "기분 나빠"],
+                    need: ["연락", "답장", "소통", "존중", "예의", "대답"],
+                    request: ["답장해", "확인해", "알려", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 26
+                text: "같이 밥을 먹거나 놀러 갈 때, 친구가 항상 내 의견은 묻지도 않고 자기 마음대로 메뉴나 장소를 정해버립니다.",
+                keywords: {
+                    fact: ["밥", "메뉴", "장소", "항상", "의견", "묻지", "자기 마음", "정해"],
+                    feeling: ["서운", "무시", "답답", "소외", "불만", "속상"],
+                    need: ["타협", "같이", "의견", "존중", "대화", "배려", "공평"],
+                    request: ["물어봐", "같이 정해", "맞춰", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 27
+                text: "친구가 나랑 친하다는 이유로 남들 앞에서도 선을 넘는 거친 장난이나 심한 말을 자주 해서 상처를 받습니다.",
+                keywords: {
+                    fact: ["친하다는", "이유", "남들", "선", "거친", "장난", "심한 말", "자주"],
+                    feeling: ["상처", "불쾌", "속상", "당황", "화가", "부끄", "불편"],
+                    need: ["선", "예의", "존중", "배려", "친구", "조심"],
+                    request: ["하지 마", "조심해", "그만해", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 28
+                text: "조별과제에서 친구가 자기 파트가 너무 어렵다며 계속 핑계를 대고 은근슬쩍 나에게 일을 다 떠넘깁니다.",
+                keywords: {
+                    fact: ["조별과제", "파트", "어렵다", "핑계", "은근슬쩍", "나에게", "떠넘"],
+                    feeling: ["부담", "짜증", "힘들", "억울", "화가", "당황", "답답"],
+                    need: ["책임", "역할", "분담", "협동", "공평", "참여"],
+                    request: ["직접 해", "맡아", "노력해", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 29
+                text: "친구가 나에 대한 안 좋은 거짓 소문을 다른 아이들에게 퍼뜨렸다는 이야기를 우연히 전해 들었습니다.",
+                keywords: {
+                    fact: ["안 좋은", "거짓", "소문", "다른", "아이들", "퍼뜨렸", "전해", "들었"],
+                    feeling: ["충격", "배신감", "억울", "속상", "당황", "화가", "슬퍼"],
+                    need: ["진실", "해명", "솔직", "오해", "믿음", "사실"],
+                    request: ["말해봐", "설명해", "사과해", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            },
+            { // 30
+                text: "나와 마주 앉아 심각한 고민을 이야기하고 있는데, 친구가 내 눈을 보지 않고 계속 스마트폰만 만지작거립니다.",
+                keywords: {
+                    fact: ["고민", "이야기", "눈", "안 보고", "계속", "스마트폰", "폰만", "만지작"],
+                    feeling: ["무시", "서운", "답답", "기운 빠", "속상", "허탈"],
+                    need: ["집중", "경청", "공감", "대화", "존중", "소통"],
+                    request: ["내려놔", "들어", "봐", "줄래", "부탁", "수 있어", "좋겠"]
+                }
+            }
+        ];
+
+        // DOM Elements
+        const screens = {
+            start: document.getElementById('start-screen'),
+            game: document.getElementById('game-screen'),
+            result: document.getElementById('result-screen')
+        };
+        const header = document.getElementById('header');
+        const progressBar = document.getElementById('progress-bar');
+        const stageNumSpan = document.getElementById('current-stage');
+        const totalStagesSpan = document.getElementById('total-stages');
+        
+        const scenarioNumSpan = document.getElementById('scenario-number');
+        const scenarioTextP = document.getElementById('scenario-text');
+        const userInput = document.getElementById('user-input');
+        const submitBtn = document.getElementById('submit-btn');
+
+        const modal = document.getElementById('feedback-modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalIcon = document.getElementById('modal-icon');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDesc = document.getElementById('modal-desc');
+        const modalBtn = document.getElementById('modal-btn');
+
+        // Initialization
+        totalStagesSpan.innerText = scenarios.length;
+
+        function startGame() {
+            screens.start.classList.add('hidden');
+            screens.game.classList.remove('hidden');
+            header.classList.remove('hidden');
+            header.classList.add('flex');
+            currentStage = 0;
+            loadScenario();
+        }
+
+        function loadScenario() {
+            const data = scenarios[currentStage];
+            scenarioNumSpan.innerText = currentStage + 1;
+            scenarioTextP.innerText = data.text;
+            userInput.value = '';
+            userInput.focus();
+            updateProgress();
+        }
+
+        function updateProgress() {
+            stageNumSpan.innerText = currentStage + 1;
+            const progress = (currentStage / scenarios.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function resetGame() {
+            currentStage = 0;
+            screens.result.classList.add('hidden');
+            screens.start.classList.remove('hidden');
+            header.classList.add('hidden');
+            progressBar.style.width = '0%';
+        }
+
+        function showHint() {
+            showModal(
+                '💡 작성 꿀팁!', 
+                `
+                <b>[사실]</b> 상대방의 행동을 있는 그대로 (예: 네가 ~해서)<br><br>
+                <b>[감정]</b> 내 진짜 기분을 솔직하게 (예: 나는 속상했어)<br><br>
+                <b>[기대]</b> 내가 왜 그런 감정을 느꼈는지 이유나 가치 (예: 난 우리가 ~게 지내는 게 중요하거든)<br><br>
+                <b>[부탁]</b> 긍정적인 행동을 요청 (예: 다음부터는 ~해줄 수 있을까?)
+                `, 
+                '알겠어요', 
+                false
+            );
+        }
+
+        function checkKeywords(text, keywordArray) {
+            // Check if at least one keyword from the array exists in the user's text
+            return keywordArray.some(keyword => text.includes(keyword));
+        }
+
+        function submitAnswer() {
+            const text = userInput.value.trim();
+            const data = scenarios[currentStage];
+            
+            // Basic length check
+            if (text.length < 15) {
+                userInput.parentElement.classList.add('shake');
+                setTimeout(() => userInput.parentElement.classList.remove('shake'), 500);
+                showModal('너무 짧아요!', '상황을 설명하고 감정을 전달하려면 조금 더 길고 구체적으로 적어주세요. (15자 이상)', '다시 쓰기', false);
+                return;
+            }
+
+            // Keyword Validation
+            const hasFact = checkKeywords(text, data.keywords.fact);
+            const hasFeeling = checkKeywords(text, data.keywords.feeling);
+            const hasNeed = checkKeywords(text, data.keywords.need);
+            const hasRequest = checkKeywords(text, data.keywords.request);
+
+            const missingList = [];
+            if (!hasFact) missingList.push("<span class='text-red-500 font-bold'>[1. 객관적 사실]</span> 네가 ~를 해서 (상황 설명)");
+            if (!hasFeeling) missingList.push("<span class='text-blue-500 font-bold'>[2. 진솔한 감정]</span> 나는 ~게 느껴져 (감정 단어)");
+            if (!hasNeed) missingList.push("<span class='text-green-500 font-bold'>[3. 기대/바람]</span> 나는 ~게 중요해/필요해 (이유나 가치)");
+            if (!hasRequest) missingList.push("<span class='text-purple-500 font-bold'>[4. 구체적 부탁]</span> 앞으로 ~해줄 수 있어? (부탁하는 말)");
+
+            if (missingList.length === 0) {
+                // Success
+                showModal('🎉 정답입니다!', 
+                    `완벽해요! 비난하지 않고 나의 입장을 잘 전달했습니다.<br><br><b>내가 쓴 대화:</b><br>"${text}"`, 
+                    currentStage === scenarios.length - 1 ? '최종 결과 보기' : '다음 상황으로', 
+                    true
+                );
+            } else {
+                // Fail
+                let errorMsg = `아직 대화 공식이 모두 채워지지 않았어요.<br>아래 요소가 문장에 포함되었는지 확인해보세요!<br><br>`;
+                errorMsg += `<ul class="list-disc pl-5 mt-2 space-y-2">`;
+                missingList.forEach(item => errorMsg += `<li>${item}</li>`);
+                errorMsg += `</ul><br>관련 단어를 포함해서 다시 써보세요!`;
+                
+                showModal('앗, 무언가 빠졌어요!', errorMsg, '다시 쓰기', false);
+            }
+        }
+
+        let isSuccessModal = false;
+
+        function showModal(title, descHTML, btnText, isSuccess) {
+            modalTitle.innerText = title;
+            modalDesc.innerHTML = descHTML;
+            modalBtn.innerText = btnText;
+            isSuccessModal = isSuccess;
+
+            if (isSuccess) {
+                modalIcon.innerText = '🥳';
+                modalBtn.className = 'w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition-colors';
+            } else {
+                modalIcon.innerText = '🧐';
+                modalBtn.className = 'w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-colors';
+            }
+
+            modal.classList.remove('hidden');
+            // Small delay for transition
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                
+                if (isSuccessModal) {
+                    currentStage++;
+                    if (currentStage >= scenarios.length) {
+                        // End Game
+                        screens.game.classList.add('hidden');
+                        header.classList.add('hidden');
+                        screens.result.classList.remove('hidden');
+                    } else {
+                        // Next Stage
+                        loadScenario();
+                    }
+                } else {
+                    userInput.focus();
+                }
+            }, 300);
+        }
+    </script>
+</body>
+</html>
